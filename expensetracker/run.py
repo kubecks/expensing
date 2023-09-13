@@ -3,7 +3,7 @@ import logging
 import gspread
 from google.oauth2.service_account import Credentials
 
-# Define the scope for Google Sheets API access
+
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.file",
@@ -18,6 +18,10 @@ SHEET = GSPREAD_CLIENT.open_by_url('https://docs.google.com/spreadsheets/d/1TR5G
 
 # Define a worksheet for logging data (create if it doesn't exist)
 expenses = SHEET.worksheet('expenses')
+
+# Now you can work with the worksheet
+data = expenses.get_all_values()
+print(data)
 
 # Define the Expense class
 class Expense:
@@ -38,7 +42,7 @@ class ExpenseTracker:
         self.expense_categories = self.load_categories()  # Initialize categories from Google Sheets
         self.user_budget = self.get_user_budget() 
         self.setup_logger()  # Call the setup_logger method to initialize the logger
-    
+
     def setup_logger(self):
         """
         Set up and configure a logger for logging application events.
@@ -64,12 +68,7 @@ class ExpenseTracker:
 
         :return: Monthly budget amount.
         """
-        try:
-            budget = float(input("Enter your monthly budget: "))
-            return budget
-        except ValueError:
-            print("Invalid input. Please enter a valid number.")
-            return self.get_user_budget()
+        return float(input("Enter your monthly budget: "))
 
     def colorize(self, text, color):
         """
@@ -86,10 +85,9 @@ class ExpenseTracker:
         }
         return f"{colors[color]}{text}{colors['white']}"
     
-
     def load_data(self, sheet, column):
         """
-        Load data from a specific column in a Google Sheets worksheet with error handling.
+        Load data from a specific column in a Google Sheets worksheet.
 
         Args:
             sheet (gspread.Worksheet): The Google Sheets worksheet.
@@ -106,16 +104,13 @@ class ExpenseTracker:
                 return data
             else:
                 return []  # Column not found
-        except gspread.exceptions.CellNotFound:
-            print(f"Error: Column '{column}' not found in the Google Sheets.")
-            return []
         except Exception as e:
-            print(f"Error loading data from Google Sheets: {e}")
+            self.logger.error(f"Error loading data from Google Sheets: {e}")
             return []
 
     def save_data(self, sheet, data, column):
         """
-        Save data to a specific column in a Google Sheets worksheet with error handling.
+        Save data to a specific column in a Google Sheets worksheet.
 
         Args:
             sheet (gspread.Worksheet): The Google Sheets worksheet.
@@ -130,9 +125,9 @@ class ExpenseTracker:
             # Update the column with the new data
             sheet.update(value=data, range_name=column)
         except Exception as e:
-            print(f"Error saving data to Google Sheets: {e}")
+            self.logger.error(f"Error saving data to Google Sheets: {e}")
 
-
+            
     def summarize_expenses(self):
         """
         Summarize expenses and display the total and category-wise totals.
@@ -180,7 +175,7 @@ class ExpenseTracker:
         except Exception as e:
             self.logger.error(f"Error loading expenses from Google Sheets: {e}")
             return []
-            
+
     def save_expenses(self):
         """
         Save expenses to the Google Sheets "Expenses" worksheet.
@@ -196,47 +191,7 @@ class ExpenseTracker:
             self.expense_sheet.update(data_to_save)
         except Exception as e:
             self.logger.error(f"Error saving expenses to Google Sheets: {e}")
-
-    def run(self):
-        """
-        Start the Expense Tracker application.
-        """
-        self.expenses = self.load_expenses()
-
-        while True:
-            print("Expense Tracker Menu")
-            print("1. Add Expense")
-            print("2. Display Expenses")
-            print("3. Edit/Remove Expense")
-            print("4. Adjust Monthly Budget")
-            print("5. Manage Categories")
-            print("6. Summarize Expenses")
-            print("7. Exit")
-
-            choice = input("Select an option: ")
-
-            if choice == "1":
-                expense = self.get_user_expense()
-                self.expenses.append(expense)
-                self.save_expenses()
-                print("Expense added successfully.")
-            elif choice == "2":
-                self.display_expenses()
-            elif choice == "3":
-                self.edit_or_remove_expense()
-            elif choice == "4":
-                new_budget = self.get_user_budget()
-                self.set_user_budget(new_budget)
-                print(f"Monthly budget adjusted to €{new_budget:.2f}")
-            elif choice == "5":
-                self.manage_items(self.expense_categories, "Category")
-            elif choice == "6":
-                self.summarize_expenses()
-            elif choice == "7":
-                break
-            else:
-                print("Invalid choice. Please try again.")
-
+    
     def load_categories(self):
         """
         Load categories from the Google Sheets "Categories" worksheet.
@@ -263,15 +218,15 @@ class ExpenseTracker:
         try:
             self.display_items(items, item_type)
             item_index = int(input(f"Enter the index of the {item_type.lower()} to edit: ")) - 1
-            if 0 <= item_index < len(items):
+            if item_index in range(len(items)):
                 new_value = input(f"Enter the new value for '{items[item_index]}': ")
                 items[item_index] = new_value
-                self.save_data(self.categories_sheet, items, "Category")
+                self.save_data(items, self.categories_file_path)
                 print(f"{item_type} updated successfully.")
             else:
-                print("Invalid index. Please enter a valid index.")
-        except ValueError:
-            print("Invalid input. Please enter a valid index.")
+                print("Invalid index.")
+        except Exception as e:
+            self.logger.error(f"Error editing item: {e}")
 
     def delete_item(self, items, item_type):
         """
@@ -284,14 +239,26 @@ class ExpenseTracker:
         try:
             self.display_items(items, item_type)
             item_index = int(input(f"Enter the index of the {item_type.lower()} to delete: ")) - 1
-            if 0 <= item_index < len(items):
+            if item_index in range(len(items)):
                 deleted_item = items.pop(item_index)
-                self.save_data(self.categories_sheet, items, "Category")
+                self.save_data(items, self.categories_file_path)
                 print(f"{item_type} '{deleted_item}' deleted successfully.")
             else:
-                print("Invalid index. Please enter a valid index.")
-        except ValueError:
-            print("Invalid input. Please enter a valid index.")
+                print("Invalid index.")
+        except Exception as e:
+            self.logger.error(f"Error deleting item: {e}")
+
+    def display_items(self, items, item_type):
+        """
+        Display the list of items.
+
+        Args:
+            items (list): The list of items to display.
+            item_type (str): The type of items being displayed.
+        """
+        print(f"{item_type} List:")
+        for index, item in enumerate(items, start=1):
+            print(f"{index}. {item}")
 
     def manage_items(self, items, item_type):
         """
@@ -329,47 +296,6 @@ class ExpenseTracker:
             else:
                 print("Invalid choice. Please try again.")
 
-    def run(self):
-        """
-        Start the Expense Tracker application.
-        """
-        self.expenses = self.load_expenses()
-        self.expense_categories = self.load_categories()  # Initialize categories from Google Sheets
-
-        while True:
-            print("Expense Tracker Menu")
-            print("1. Add Expense")
-            print("2. Display Expenses")
-            print("3. Edit/Remove Expense")
-            print("4. Adjust Monthly Budget")
-            print("5. Manage Categories")
-            print("6. Summarize Expenses")
-            print("7. Exit")
-
-            choice = input("Select an option: ")
-
-            if choice == "1":
-                expense = self.get_user_expense()
-                self.expenses.append(expense)
-                self.save_expenses()
-                print("Expense added successfully.")
-            elif choice == "2":
-                self.display_expenses()
-            elif choice == "3":
-                self.edit_or_remove_expense()
-            elif choice == "4":
-                new_budget = self.get_user_budget()
-                self.set_user_budget(new_budget)
-                print(f"Monthly budget adjusted to €{new_budget:.2f}")
-            elif choice == "5":
-                self.manage_items(self.expense_categories, "Category")
-            elif choice == "6":
-                self.summarize_expenses()
-            elif choice == "7":
-                break
-            else:
-                print("Invalid choice. Please try again.")
-
     def get_user_expense(self):
         """
         Get an expense input from the user.
@@ -402,14 +328,18 @@ class ExpenseTracker:
         """
         Display the list of expenses.
         """
-        print("Expenses:")
+        print("expenses:")
         for expense in self.expenses:
             print(expense)
 
     def edit_or_remove_expense(self):
         """
-        Edit or remove an existing expense from the list of expenses.
+    Edit or remove an existing expense from the list of expenses.
+
+    Args:
+        expenses (list): The list of Expense objects representing expenses.
         """
+
         self.display_expenses()
         expense_index = int(input("Enter the index of the expense to edit/remove: ")) - 1
 
@@ -450,8 +380,7 @@ class ExpenseTracker:
         """
         Start the Expense Tracker application.
         """
-        self.expenses = self.load_expenses()
-        self.expense_categories = self.load_categories()  # Initialize categories from Google Sheets
+        self.load_expenses()
 
         while True:
             print("Expense Tracker Menu")
@@ -487,42 +416,49 @@ class ExpenseTracker:
             else:
                 print("Invalid choice. Please try again.")
 
-    def manage_items(self, items, item_type):
-        """
-        Manage items in the list.
+    
+    # Main function to initiate the application
+    def main(self):
+        print(f"🎯 Running Expense Tracker!")
+        logging.basicConfig(level=logging.INFO)
 
-        Args:
-            items (list): The list of items to manage.
-            item_type (str): The type of items being managed.
-        """
         while True:
-            print(f"{item_type} Management")
-            print("1. Display Items")
-            print("2. Add Item")
-            print("3. Edit Item")
-            print("4. Delete Item")
-            print("5. Exit")
+            print("Expense Tracker Menu")
+            print("1. Add Expense")
+            print("2. Display Expenses")
+            print("3. Edit/Remove Expense")
+            print("4. Adjust Monthly Budget")
+            print("5. Manage Categories")
+            print("6. Summarize Expenses")
+            print("7. Exit")
+
             choice = input("Select an option: ")
 
             if choice == "1":
-                self.display_items(items, item_type)
+                expense = self.get_user_expense()
+                self.expenses.append(expense)
+                self.save_expenses()
+                print("Expense added successfully.")
             elif choice == "2":
-                new_item = input(f"Enter the new {item_type.lower()}: ")
-                if new_item not in items:
-                    items.append(new_item)
-                    self.save_data(self.categories_sheet, items, "Category")
-                    print(f"{item_type} '{new_item}' added successfully.")
-                else:
-                    print(f"{item_type} already exists.")
+                self.display_expenses()
             elif choice == "3":
-                self.edit_item(items, item_type)
+                self.edit_or_remove_expense()
             elif choice == "4":
-                self.delete_item(items, item_type)
+                new_budget = self.get_user_budget()
+                self.set_user_budget(new_budget)
+                print(f"Monthly budget adjusted to €{new_budget:.2f}")
             elif choice == "5":
+                self.manage_items(self.expense_categories, "Category")
+            elif choice == "6":
+                self.summarize_expenses()
+            elif choice == "7":
                 break
             else:
                 print("Invalid choice. Please try again.")
 
+# Create an instance of ExpenseTracker and run the application
 
+if __name__ == "__main__":
+    expense_tracker = ExpenseTracker(SHEET)  # Pass the SHEET object directly
+    expense_tracker.main()
 
-    
