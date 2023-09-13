@@ -324,5 +324,44 @@ class ExpenseTracker:
             else:
                 print("Invalid choice. Please try again.")
 
+    def run(self):
+        """
+        Start the Expense Tracker application.
+        """
+        self.expenses = self.load_expenses()
+        self.expense_categories = self.load_categories()  # Initialize categories from Google Sheets
 
+        while True:
+            print("Expense Tracker Menu")
+            print("1. Add Expense")
+            print("2. Display Expenses")
+            print("3. Edit/Remove Expense")
+            print("4. Adjust Monthly Budget")
+            print("5. Manage Categories")
+            print("6. Summarize Expenses")
+            print("7. Exit")
+
+            choice = input("Select an option: ")
+
+            if choice == "1":
+                expense = self.get_user_expense()
+                self.expenses.append(expense)
+                self.save_expenses()
+                print("Expense added successfully.")
+            elif choice == "2":
+                self.display_expenses()
+            elif choice == "3":
+                self.edit_or_remove_expense()
+            elif choice == "4":
+                new_budget = self.get_user_budget()
+                self.set_user_budget(new_budget)
+                print(f"Monthly budget adjusted to €{new_budget:.2f}")
+            elif choice == "5":
+                self.manage_items(self.expense_categories, "Category")
+            elif choice == "6":
+                self.summarize_expenses()
+            elif choice == "7":
+                break
+            else:
+                print("Invalid choice. Please try again.")
 
