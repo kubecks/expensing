@@ -86,6 +86,7 @@ class ExpenseTracker:
         }
         return f"{colors[color]}{text}{colors['white']}"
     
+
     def load_data(self, sheet, column):
         """
         Load data from a specific column in a Google Sheets worksheet with error handling.
@@ -111,10 +112,10 @@ class ExpenseTracker:
         except Exception as e:
             print(f"Error loading data from Google Sheets: {e}")
             return []
-        
+
     def save_data(self, sheet, data, column):
         """
-        Save data to a specific column in a Google Sheets worksheet.
+        Save data to a specific column in a Google Sheets worksheet with error handling.
 
         Args:
             sheet (gspread.Worksheet): The Google Sheets worksheet.
@@ -129,7 +130,8 @@ class ExpenseTracker:
             # Update the column with the new data
             sheet.update(value=data, range_name=column)
         except Exception as e:
-            self.logger.error(f"Error saving data to Google Sheets: {e}")
+            print(f"Error saving data to Google Sheets: {e}")
+
 
     def summarize_expenses(self):
         """
@@ -261,15 +263,15 @@ class ExpenseTracker:
         try:
             self.display_items(items, item_type)
             item_index = int(input(f"Enter the index of the {item_type.lower()} to edit: ")) - 1
-            if item_index in range(len(items)):
+            if 0 <= item_index < len(items):
                 new_value = input(f"Enter the new value for '{items[item_index]}': ")
                 items[item_index] = new_value
-                self.save_data(items, self.categories_file_path)
+                self.save_data(self.categories_sheet, items, "Category")
                 print(f"{item_type} updated successfully.")
             else:
-                print("Invalid index.")
-        except Exception as e:
-            self.logger.error(f"Error editing item: {e}")
+                print("Invalid index. Please enter a valid index.")
+        except ValueError:
+            print("Invalid input. Please enter a valid index.")
 
     def delete_item(self, items, item_type):
         """
@@ -282,14 +284,14 @@ class ExpenseTracker:
         try:
             self.display_items(items, item_type)
             item_index = int(input(f"Enter the index of the {item_type.lower()} to delete: ")) - 1
-            if item_index in range(len(items)):
+            if 0 <= item_index < len(items):
                 deleted_item = items.pop(item_index)
-                self.save_data(items, self.categories_file_path)
+                self.save_data(self.categories_sheet, items, "Category")
                 print(f"{item_type} '{deleted_item}' deleted successfully.")
             else:
-                print("Invalid index.")
-        except Exception as e:
-            self.logger.error(f"Error deleting item: {e}")
+                print("Invalid index. Please enter a valid index.")
+        except ValueError:
+            print("Invalid input. Please enter a valid index.")
 
     def manage_items(self, items, item_type):
         """
@@ -367,34 +369,6 @@ class ExpenseTracker:
                 break
             else:
                 print("Invalid choice. Please try again.")
-
-    def get_user_expense(self):
-        """
-        Get an expense input from the user.
-
-        Returns:
-            Expense: The expense object.
-        """
-        print(f"🎯 Getting User Expense")
-        expense_name = input("Enter expense name: ")
-        expense_amount = float(input("Enter expense amount: "))
-
-        while True:
-            print("Select a category: ")
-            for i, category_name in enumerate(self.expense_categories, start=1):
-                print(f"  {i}. {category_name}")
-
-            value_range = f"[1 - {len(self.expense_categories)}]"
-            selected_index = int(input(f"Enter a category number {value_range}: ")) - 1
-
-            if selected_index in range(len(self.expense_categories)):
-                selected_category = self.expense_categories[selected_index]
-                new_expense = Expense(
-                    name=expense_name, category=selected_category, amount=expense_amount
-                )
-                return new_expense
-            else:
-                print("Invalid category. Please try again!")
 
     def get_user_expense(self):
         """
