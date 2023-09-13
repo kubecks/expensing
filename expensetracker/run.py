@@ -232,5 +232,97 @@ class ExpenseTracker:
             else:
                 print("Invalid choice. Please try again.")
 
+    def load_categories(self):
+        """
+        Load categories from the Google Sheets "Categories" worksheet.
+
+        Returns:
+            list: A list of category names.
+        """
+        try:
+            categories = self.load_data(self.categories_sheet, "Category")
+            print("Loaded categories:", categories)  # Add this line for debugging
+            return categories
+        except Exception as e:
+            self.logger.error(f"Error loading categories from Google Sheets: {e}")
+            return []
+
+    def edit_item(self, items, item_type):
+        """
+        Edit an item from the list of items.
+
+        Args:
+            items (list): The list of items to edit.
+            item_type (str): The type of item being edited.
+        """
+        try:
+            self.display_items(items, item_type)
+            item_index = int(input(f"Enter the index of the {item_type.lower()} to edit: ")) - 1
+            if item_index in range(len(items)):
+                new_value = input(f"Enter the new value for '{items[item_index]}': ")
+                items[item_index] = new_value
+                self.save_data(items, self.categories_file_path)
+                print(f"{item_type} updated successfully.")
+            else:
+                print("Invalid index.")
+        except Exception as e:
+            self.logger.error(f"Error editing item: {e}")
+
+    def delete_item(self, items, item_type):
+        """
+        Delete an item from the list of items.
+
+        Args:
+            items (list): The list of items to delete from.
+            item_type (str): The type of item being deleted.
+        """
+        try:
+            self.display_items(items, item_type)
+            item_index = int(input(f"Enter the index of the {item_type.lower()} to delete: ")) - 1
+            if item_index in range(len(items)):
+                deleted_item = items.pop(item_index)
+                self.save_data(items, self.categories_file_path)
+                print(f"{item_type} '{deleted_item}' deleted successfully.")
+            else:
+                print("Invalid index.")
+        except Exception as e:
+            self.logger.error(f"Error deleting item: {e}")
+
+    def manage_items(self, items, item_type):
+        """
+        Manage items in the list.
+
+        Args:
+            items (list): The list of items to manage.
+            item_type (str): The type of items being managed.
+        """
+        while True:
+            print(f"{item_type} Management")
+            print("1. Display Items")
+            print("2. Add Item")
+            print("3. Edit Item")
+            print("4. Delete Item")
+            print("5. Exit")
+            choice = input("Select an option: ")
+
+            if choice == "1":
+                self.display_items(items, item_type)
+            elif choice == "2":
+                new_item = input(f"Enter the new {item_type.lower()}: ")
+                if new_item not in items:
+                    items.append(new_item)
+                    self.save_data(self.categories_sheet, items, "Category")
+                    print(f"{item_type} '{new_item}' added successfully.")
+                else:
+                    print(f"{item_type} already exists.")
+            elif choice == "3":
+                self.edit_item(items, item_type)
+            elif choice == "4":
+                self.delete_item(items, item_type)
+            elif choice == "5":
+                break
+            else:
+                print("Invalid choice. Please try again.")
+
 
 
