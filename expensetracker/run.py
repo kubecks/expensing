@@ -365,33 +365,61 @@ class ExpenseTracker:
             else:
                 print("Invalid choice. Please try again.")
 
-def get_user_expense(self):
-    """
-    Get an expense input from the user.
+    def get_user_expense(self):
+        """
+        Get an expense input from the user.
 
-    Returns:
-        Expense: The expense object.
-    """
-    print(f"🎯 Getting User Expense")
-    expense_name = input("Enter expense name: ")
-    expense_amount = float(input("Enter expense amount: "))
+        Returns:
+            Expense: The expense object.
+        """
+        print(f"🎯 Getting User Expense")
+        expense_name = input("Enter expense name: ")
+        expense_amount = float(input("Enter expense amount: "))
 
-    while True:
-        print("Select a category: ")
-        for i, category_name in enumerate(self.expense_categories, start=1):
-            print(f"  {i}. {category_name}")
+        while True:
+            print("Select a category: ")
+            for i, category_name in enumerate(self.expense_categories, start=1):
+                print(f"  {i}. {category_name}")
 
-        value_range = f"[1 - {len(self.expense_categories)}]"
-        selected_index = int(input(f"Enter a category number {value_range}: ")) - 1
+            value_range = f"[1 - {len(self.expense_categories)}]"
+            selected_index = int(input(f"Enter a category number {value_range}: ")) - 1
 
-        if selected_index in range(len(self.expense_categories)):
-            selected_category = self.expense_categories[selected_index]
-            new_expense = Expense(
-                name=expense_name, category=selected_category, amount=expense_amount
-            )
-            return new_expense
-        else:
-            print("Invalid category. Please try again!")
+            if selected_index in range(len(self.expense_categories)):
+                selected_category = self.expense_categories[selected_index]
+                new_expense = Expense(
+                    name=expense_name, category=selected_category, amount=expense_amount
+                )
+                return new_expense
+            else:
+                print("Invalid category. Please try again!")
+
+    def get_user_expense(self):
+        """
+        Get an expense input from the user.
+
+        Returns:
+            Expense: The expense object.
+        """
+        print(f"🎯 Getting User Expense")
+        expense_name = input("Enter expense name: ")
+        expense_amount = float(input("Enter expense amount: "))
+
+        while True:
+            print("Select a category: ")
+            for i, category_name in enumerate(self.expense_categories, start=1):
+                print(f"  {i}. {category_name}")
+
+            value_range = f"[1 - {len(self.expense_categories)}]"
+            selected_index = int(input(f"Enter a category number {value_range}: ")) - 1
+
+            if selected_index in range(len(self.expense_categories)):
+                selected_category = self.expense_categories[selected_index]
+                new_expense = Expense(
+                    name=expense_name, category=selected_category, amount=expense_amount
+                )
+                return new_expense
+            else:
+                print("Invalid category. Please try again!")
 
     def display_expenses(self):
         """
@@ -440,3 +468,44 @@ def get_user_expense(self):
                 print("Invalid option.")
         else:
             print("Invalid expense index.")
+
+    def run(self):
+        """
+        Start the Expense Tracker application.
+        """
+        self.expenses = self.load_expenses()
+        self.expense_categories = self.load_categories()  # Initialize categories from Google Sheets
+
+        while True:
+            print("Expense Tracker Menu")
+            print("1. Add Expense")
+            print("2. Display Expenses")
+            print("3. Edit/Remove Expense")
+            print("4. Adjust Monthly Budget")
+            print("5. Manage Categories")
+            print("6. Summarize Expenses")
+            print("7. Exit")
+
+            choice = input("Select an option: ")
+
+            if choice == "1":
+                expense = self.get_user_expense()
+                self.expenses.append(expense)
+                self.save_expenses()
+                print("Expense added successfully.")
+            elif choice == "2":
+                self.display_expenses()
+            elif choice == "3":
+                self.edit_or_remove_expense()
+            elif choice == "4":
+                new_budget = self.get_user_budget()
+                self.set_user_budget(new_budget)
+                print(f"Monthly budget adjusted to €{new_budget:.2f}")
+            elif choice == "5":
+                self.manage_items(self.expense_categories, "Category")
+            elif choice == "6":
+                self.summarize_expenses()
+            elif choice == "7":
+                break
+            else:
+                print("Invalid choice. Please try again.")
