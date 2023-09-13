@@ -1,0 +1,2 @@
+2023-09-13 07:05:51,035 - ERROR - Error saving data to Google Sheets: 'Worksheet' object has no attribute 'worksheet'
+2023-09-13 07:28:05,600 - ERROR - Error saving data to Google Sheets: update got unexpected keyword arguments: ['value', 'range_name']
