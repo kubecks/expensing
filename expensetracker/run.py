@@ -108,4 +108,24 @@ class ExpenseTracker:
         except Exception as e:
             self.logger.error(f"Error loading data from Google Sheets: {e}")
             return []
+        
+    def save_data(self, sheet, data, column):
+        """
+        Save data to a specific column in a Google Sheets worksheet.
+
+        Args:
+            sheet (gspread.Worksheet): The Google Sheets worksheet.
+            data (list): The data to be saved.
+            column (str): The name of the column to save data to.
+        """
+        try:
+            # Clear the existing data in the column
+            sheet.update(value=[[]], range_name=column)  # Clear the range
+            # Append the header
+            data.insert(0, [column])
+            # Update the column with the new data
+            sheet.update(value=data, range_name=column)
+        except Exception as e:
+            self.logger.error(f"Error saving data to Google Sheets: {e}")
+
 
