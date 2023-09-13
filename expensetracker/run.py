@@ -38,7 +38,7 @@ class ExpenseTracker:
         self.expense_categories = self.load_categories()  # Initialize categories from Google Sheets
         self.user_budget = self.get_user_budget() 
         self.setup_logger()  # Call the setup_logger method to initialize the logger
-
+    
     def setup_logger(self):
         """
         Set up and configure a logger for logging application events.
@@ -88,7 +88,7 @@ class ExpenseTracker:
     
     def load_data(self, sheet, column):
         """
-        Load data from a specific column in a Google Sheets worksheet.
+        Load data from a specific column in a Google Sheets worksheet with error handling.
 
         Args:
             sheet (gspread.Worksheet): The Google Sheets worksheet.
@@ -105,8 +105,11 @@ class ExpenseTracker:
                 return data
             else:
                 return []  # Column not found
+        except gspread.exceptions.CellNotFound:
+            print(f"Error: Column '{column}' not found in the Google Sheets.")
+            return []
         except Exception as e:
-            self.logger.error(f"Error loading data from Google Sheets: {e}")
+            print(f"Error loading data from Google Sheets: {e}")
             return []
         
     def save_data(self, sheet, data, column):
@@ -546,13 +549,6 @@ class ExpenseTracker:
             else:
                 print("Invalid choice. Please try again.")
 
-    def setup_logger(self):
-        """
-        Set up and configure a logger for logging application events.
-        """
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        file_handler = logging.FileHandler('expense_tracker.log')
-        file_handler.setFormatter(formatter)
-        self.logger.addHandler(file_handler)
+
+
+    
