@@ -128,4 +128,30 @@ class ExpenseTracker:
         except Exception as e:
             self.logger.error(f"Error saving data to Google Sheets: {e}")
 
+    def summarize_expenses(self):
+        """
+        Summarize expenses and display the total and category-wise totals.
+        """
+        category_totals = {}
+        total_expenses = 0
+
+        for expense in self.expenses:
+            total_expenses += expense.amount
+            category_totals[expense.category] = category_totals.get(expense.category, 0) + expense.amount
+
+        budget = self.get_user_budget()
+
+        if total_expenses < budget:
+            total_expenses_formatted = self.colorize(f'€{total_expenses:.2f}', 'green')
+        elif total_expenses > budget:
+            total_expenses_formatted = self.colorize(f'€{total_expenses:.2f}', 'red')
+        else:
+            total_expenses_formatted = self.colorize(f'€{total_expenses:.2f}', 'white')
+
+        print(f"Total Expenses: {total_expenses_formatted}")
+        print("Category-wise Expenses:")
+        for category, amount in category_totals.items():
+            formatted_amount = self.colorize(f'€{amount:.2f}', 'green')
+            print(f"{category}: {formatted_amount}")
+
 
