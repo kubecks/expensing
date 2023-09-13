@@ -85,4 +85,27 @@ class ExpenseTracker:
             "white": "\033[0m",
         }
         return f"{colors[color]}{text}{colors['white']}"
+    
+    def load_data(self, sheet, column):
+        """
+        Load data from a specific column in a Google Sheets worksheet.
+
+        Args:
+            sheet (gspread.Worksheet): The Google Sheets worksheet.
+            column (str): The name of the column to load data from.
+
+        Returns:
+            list: A list containing loaded data from the specified column.
+        """
+        try:
+            column_obj = sheet.find(column)
+            if column_obj:
+                data = sheet.col_values(column_obj.col)
+                data.pop(0)  # Remove the header
+                return data
+            else:
+                return []  # Column not found
+        except Exception as e:
+            self.logger.error(f"Error loading data from Google Sheets: {e}")
+            return []
 
