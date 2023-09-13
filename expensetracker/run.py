@@ -365,3 +365,78 @@ class ExpenseTracker:
             else:
                 print("Invalid choice. Please try again.")
 
+def get_user_expense(self):
+    """
+    Get an expense input from the user.
+
+    Returns:
+        Expense: The expense object.
+    """
+    print(f"🎯 Getting User Expense")
+    expense_name = input("Enter expense name: ")
+    expense_amount = float(input("Enter expense amount: "))
+
+    while True:
+        print("Select a category: ")
+        for i, category_name in enumerate(self.expense_categories, start=1):
+            print(f"  {i}. {category_name}")
+
+        value_range = f"[1 - {len(self.expense_categories)}]"
+        selected_index = int(input(f"Enter a category number {value_range}: ")) - 1
+
+        if selected_index in range(len(self.expense_categories)):
+            selected_category = self.expense_categories[selected_index]
+            new_expense = Expense(
+                name=expense_name, category=selected_category, amount=expense_amount
+            )
+            return new_expense
+        else:
+            print("Invalid category. Please try again!")
+
+    def display_expenses(self):
+        """
+        Display the list of expenses.
+        """
+        print("Expenses:")
+        for expense in self.expenses:
+            print(expense)
+
+    def edit_or_remove_expense(self):
+        """
+        Edit or remove an existing expense from the list of expenses.
+        """
+        self.display_expenses()
+        expense_index = int(input("Enter the index of the expense to edit/remove: ")) - 1
+
+        if expense_index in range(len(self.expenses)):
+            selected_expense = self.expenses[expense_index]
+
+            print(f"Selected Expense: {selected_expense}")
+            print("1. Edit Expense")
+            print("2. Remove Expense")
+            edit_or_remove_choice = input("Select an option (1 or 2): ")
+
+            if edit_or_remove_choice == "1":
+                # Edit Expense
+                updated_name = input("Enter the updated expense name (or press Enter to keep the current name): ")
+                updated_amount = input("Enter the updated expense amount (or press Enter to keep the current amount): ")
+                updated_category = input("Enter the updated expense category (or press Enter to keep the current category): ")
+
+                if updated_name:
+                    selected_expense.name = updated_name
+                if updated_amount:
+                    selected_expense.amount = float(updated_amount)
+                if updated_category:
+                    selected_expense.category = updated_category
+
+                self.save_expenses()
+                print("Expense updated successfully.")
+            elif edit_or_remove_choice == "2":
+                # Remove Expense
+                removed_expense = self.expenses.pop(expense_index)
+                self.save_expenses()
+                print(f"Expense '{removed_expense}' removed successfully.")
+            else:
+                print("Invalid option.")
+        else:
+            print("Invalid expense index.")
