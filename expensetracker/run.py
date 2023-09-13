@@ -58,3 +58,31 @@ class ExpenseTracker:
         """
         self.user_budget = budget
 
+    def get_user_budget(self):
+        """
+        Prompt the user to input monthly budget and return it.
+
+        :return: Monthly budget amount.
+        """
+        try:
+            budget = float(input("Enter your monthly budget: "))
+            return budget
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+            return self.get_user_budget()
+
+    def colorize(self, text, color):
+        """
+        Apply color to the text for console output.
+
+        :param text: Text to be colored.
+        :param color: Color name (e.g., 'red', 'green', 'white').
+        :return: Colored text.
+        """
+        colors = {
+            "red": "\033[91m",
+            "green": "\033[92m",
+            "white": "\033[0m",
+        }
+        return f"{colors[color]}{text}{colors['white']}"
+
